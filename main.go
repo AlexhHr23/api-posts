@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/AlexhHr23/gopost-api/handlers"
+	"github.com/AlexhHr23/gopost-api/config"
+	"github.com/AlexhHr23/gopost-api/server"
 )
 
 // func hola(w http.ResponseWriter, r *http.Request) {
@@ -36,18 +36,23 @@ func health(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	mux := http.NewServeMux()
+	// mux := http.NewServeMux()
 	// mux.HandleFunc("GET /hola/{name}/{age}", hola)
 	// mux.HandleFunc("GET /hola/info", hola)
 
-	mux.HandleFunc("GET /health", health)
+	// mux.HandleFunc("GET /health", health)
 
-	mux.HandleFunc("GET /posts", handlers.GetPosts)
-	mux.HandleFunc("POST /posts", handlers.CreatetPost)
-	mux.HandleFunc("GET /posts/{id}", handlers.GetPostById)
-	mux.HandleFunc("PUT /posts/{id}", handlers.UpdatetPost)
-	mux.HandleFunc("DELETE /posts/{id}", handlers.DeletePost)
+	// mux.HandleFunc("GET /posts", handlers.GetPosts)
+	// mux.HandleFunc("POST /posts", handlers.CreatetPost)
+	// mux.HandleFunc("GET /posts/{id}", handlers.GetPostById)
+	// mux.HandleFunc("PUT /posts/{id}", handlers.UpdatetPost)
+	// mux.HandleFunc("DELETE /posts/{id}", handlers.DeletePost)
 
-	fmt.Println("Servirdor iniciendo en http://localhost:8080")
-	http.ListenAndServe(":8080", mux)
+	// fmt.Println("Servirdor iniciendo en http://localhost:8080")
+	// http.ListenAndServe(":8080", mux)
+
+	config := config.LoadConfig()
+
+	app := server.NewApp()
+	app.RunServer(config.Port)
 }

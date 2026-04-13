@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/AlexhHr23/gopost-api/server"
 )
 
 type Post struct {
@@ -16,85 +16,78 @@ type Post struct {
 var posts []Post
 var nextId = 1
 
-func GetPosts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(posts)
-
+func GetPosts(c *server.Context) {
+	err := c.JSON(http.StatusOK, posts)
 	if err != nil {
-		http.Error(w, "Error al codificar JSON", http.StatusInternalServerError)
+		http.Error(c.RWriter, "Error al codificar JSON", http.StatusInternalServerError)
 	}
 }
 
-func CreatetPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func CreatetPost(c *server.Context) {
 
 	var post Post
-	err := json.NewDecoder(r.Body).Decode(&post)
+
+	err := c.BindJson(post)
+
 	if err != nil {
-		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		http.Error(c.RWriter, "Error al decodificar JSON", http.StatusBadRequest)
 	}
 
 	post.Id = nextId
 	nextId++
 	posts = append(posts, post)
 
-	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(post)
-	fmt.Println("err", err)
+	err = c.JSON(http.StatusCreated, post)
 	if err != nil {
-		http.Error(w, "Error al codificar JSON", http.StatusInternalServerError)
+		http.Error(c.RWriter, "Error al codificar JSON", http.StatusInternalServerError)
 	}
 }
 
-func UpdatetPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func UpdatetPost(c *server.Context) {
 
-	idStr := r.PathValue("id")
+	idStr := c.Request.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
 	var updatedPost Post
-	err := json.NewDecoder(r.Body).Decode(&updatedPost)
+	err := c.BindJson(updatedPost)
 	if err != nil {
-		http.Error(w, "Error al decodificar JSON", http.StatusBadRequest)
+		http.Error(c.RWriter, "Error al decodificar JSON", http.StatusBadRequest)
 	}
 
 	for i := range posts {
 		if posts[i].Id == id {
 			posts[i].Title = updatedPost.Title
 			posts[i].Content = updatedPost.Content
-			json.NewEncoder(w).Encode(posts[i])
+			c.JSON(http.StatusOK, posts[i])
 			return
 		}
 	}
 
-	http.Error(w, "Post no encontrado", http.StatusNotFound)
+	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
 }
 
-func DeletePost(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
+func DeletePost(c *server.Context) {
+	idStr := c.Request.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
 	for i := range posts {
 		if posts[i].Id == id {
 			posts = append(posts[:i], posts[i+1:]...)
-			http.Error(w, "Post borrado correctamente", http.StatusOK)
+			http.Error(c.RWriter, "Post borrado correctamente", http.StatusOK)
 			return
 		}
 	}
 
-	http.Error(w, "Post no encontrado", http.StatusNotFound)
+	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
 }
 
-func GetPostById(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	idStr := r.PathValue("id")
+func GetPostById(c *server.Context) {
+	idStr := c.Request.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
 	for _, post := range posts {
 		if post.Id == id {
-			json.NewEncoder(w).Encode(post)
+			c.JSON(http.StatusOK, post)
 			return
 		}
 	}
 
-	http.Error(w, "Post no encontrado", http.StatusNotFound)
+	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
 }
