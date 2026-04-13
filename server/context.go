@@ -8,7 +8,7 @@ import (
 
 type Context struct {
 	RWriter http.ResponseWriter
-	Request http.Request
+	Request *http.Request
 	Ctx     context.Context
 	UserID  uint
 }

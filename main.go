@@ -1,9 +1,10 @@
 package main
 
 import (
-	"net/http"
+	"log"
 
 	"github.com/AlexhHr23/gopost-api/config"
+	"github.com/AlexhHr23/gopost-api/handlers"
 	"github.com/AlexhHr23/gopost-api/server"
 )
 
@@ -28,10 +29,8 @@ import (
 // 	}
 // }
 
-func health(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+func health(c *server.Context) {
+	c.Send("Servidor corriendo")
 }
 
 func main() {
@@ -54,5 +53,18 @@ func main() {
 	config := config.LoadConfig()
 
 	app := server.NewApp()
-	app.RunServer(config.Port)
+
+	app.Get("/health", health)
+
+	app.Post("/posts", handlers.CreatetPost)
+	app.Get("/posts", handlers.GetPosts)
+	app.Put("/posts", handlers.UpdatetPost)
+	app.Get("/posts/{id}", handlers.GetPostById)
+	app.Delete("/posts/{id}", handlers.DeletePost)
+
+	err := app.RunServer(config.Port)
+
+	if err != nil {
+		log.Fatal("Error al iniciar el servirdor", err)
+	}
 }
