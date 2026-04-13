@@ -11,7 +11,7 @@ var DB *sql.DB
 
 func Connect(dsn string) error {
 	var err error
-	DB, err := sql.Open("mysql", dsn)
+	DB, err = sql.Open("mysql", dsn)
 
 	if err != nil {
 		return fmt.Errorf("Error al abrir la base de datos: %w", err)
