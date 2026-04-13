@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/AlexhHr23/gopost-api/config"
+	"github.com/AlexhHr23/gopost-api/database"
 	"github.com/AlexhHr23/gopost-api/handlers"
 	"github.com/AlexhHr23/gopost-api/server"
 )
@@ -51,6 +52,14 @@ func main() {
 	// http.ListenAndServe(":8080", mux)
 
 	config := config.LoadConfig()
+
+	if err := database.Connect(config.DatabaseURL); err != nil {
+		log.Fatal("Error al conector a la base de datos: ", err)
+	}
+
+	log.Println("Conexion a la base datos exitosa")
+
+	defer database.Close()
 
 	app := server.NewApp()
 
