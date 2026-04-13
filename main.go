@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	// "fmt"
 	"log"
 
 	"github.com/AlexhHr23/gopost-api/config"
 	"github.com/AlexhHr23/gopost-api/database"
+
+	// "github.com/AlexhHr23/gopost-api/models"
 	"github.com/AlexhHr23/gopost-api/repositories"
 	"github.com/AlexhHr23/gopost-api/server"
 )
@@ -43,36 +46,59 @@ func main() {
 		log.Fatal("Error al conector a la base de datos: ", err)
 	}
 
-	log.Println("Conexion a la base datos exitosa")
-
-	defer database.Close()
-
-	userRepo := repositories.NewUserRepository(database.DB)
-
-	user, err := userRepo.FindByID(context.Background(), 5)
-
-	if err != nil {
-		log.Println("Error al buscar usuario: ", err)
-	} else {
-		log.Printf("Usuario encontarado: %+v\n", user)
-	}
-
 	app := server.NewApp()
 
-	user, err = userRepo.FindByEmail(context.Background(), "AlexH@gmail.com")
+	postRepo := repositories.NewPostRepository(database.DB)
+
+	//LIstar posts
+	posts, err := postRepo.FindAll(context.Background())
 
 	if err != nil {
-		log.Println("Error al buscar usuario: ", err)
-	} else {
-		log.Printf("Usuario encontarado: %+v\n", user)
+		log.Fatal("Error al obtener posts: ", err)
 	}
 
-	valor, err := userRepo.EmailExist(context.Background(), "AlanH@gmail.com")
+	for _, post := range posts {
+		log.Printf("Post ID: %d, UserID: %d, Title: %s\n", post.ID, post.UserID, post.Title)
+	}
+
+	//Listar post por id
+	post, err := postRepo.FindById(context.Background(), 2)
 
 	if err != nil {
-		log.Println("Error al verificar existencia de mail: ", err)
+		log.Fatal("Error al obtener post por ID: ", err)
+	}
+
+	log.Printf("Post obtenido por ID: %d, Title: %s,\n", post.ID, post.Title)
+
+	//Post de user ID
+	userPosts, err := postRepo.FindByUserId(context.Background(), 2)
+
+	if err != nil {
+		log.Fatal("Error al obtener posts por user ID: ", err)
+	}
+
+	for _, post := range userPosts {
+		log.Printf("Post de user ID 2 - Post ID: %d , Title: %s\n", post.ID, post.Title)
+	}
+
+	//Actualizar
+	// post.Title = "Titulo actualizado"
+	// post.Content = "Contenido actualizado"
+	// err = postRepo.Update(context.Background(), post)
+
+	// if err != nil {
+	// 	log.Fatal("Error al actualizar el post: ", err)
+	// }
+
+	// log.Printf("Post actualizado: ID: %d, Title: %s\n", post.ID, post.Title)
+
+	//Eliminar
+	err = postRepo.Delete(context.Background(), 3)
+
+	if err != nil {
+		log.Fatal("Error al eliminar el post: ", err)
 	} else {
-		log.Println("El usuario existe?", valor)
+		log.Println("Post eliminado con exito")
 	}
 
 	// app.Get("/health", health)
