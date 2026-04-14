@@ -13,7 +13,7 @@ type SignUpInput struct {
 	Passowrd string `json:"password"`
 }
 
-type LoginIputo struct {
+type LoginIput struct {
 	Email    string `json:"email"`
 	Passowrd string `json:"password"`
 }

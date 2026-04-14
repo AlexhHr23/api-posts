@@ -8,6 +8,7 @@ import (
 	"github.com/AlexhHr23/gopost-api/config"
 	"github.com/AlexhHr23/gopost-api/database"
 	"github.com/AlexhHr23/gopost-api/handlers"
+	"github.com/AlexhHr23/gopost-api/middleware"
 	"github.com/AlexhHr23/gopost-api/repositories"
 	"github.com/AlexhHr23/gopost-api/services"
 
@@ -64,6 +65,9 @@ func main() {
 
 	app.Get("/health", health)
 	app.Post("/signup", userHandler.SignUpHandler)
+	app.Post("/login", userHandler.LoginHandler)
+
+	app.Get("/me", middleware.AuthMiddleware(userHandler.MeHandler))
 
 	err := app.RunServer(config.Port)
 

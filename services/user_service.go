@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"time"
 
+	"github.com/AlexhHr23/gopost-api/config"
 	"github.com/AlexhHr23/gopost-api/models"
 	"github.com/AlexhHr23/gopost-api/repositories"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -73,4 +76,43 @@ func (s *UserService) SignUp(ctx context.Context, name, email, password string) 
 	}
 
 	return user, nil
+}
+
+//Generar toke jwt
+
+func (s *UserService) generateToken(userId uint) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userId,
+		"exp":     jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(config.AppConfig.JWTSecret))
+}
+
+// Logiun placeholder
+func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {
+	user, err := s.repo.FindByEmail(ctx, email)
+
+	if err != nil {
+		return "", fmt.Errorf("Credenciales incorrectas")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+
+	if err != nil {
+		return "", fmt.Errorf("Crendeciales incorrectas")
+	}
+
+	token, err := s.generateToken(user.ID)
+
+	if err != nil {
+		return "", fmt.Errorf("error al generar le token: %w", err)
+	}
+
+	return token, nil
+}
+
+func (s *UserService) GetUserByID(ctx context.Context, id uint) (*models.User, error) {
+	return s.repo.FindByID(ctx, id)
 }

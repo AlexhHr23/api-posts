@@ -2,6 +2,8 @@ package server
 
 import "net/http"
 
+type HandleFunc func(c *Context)
+
 func (app *App) Get(path string, handler func(*Context)) {
 	app.mux.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) {
 		handler(&Context{
