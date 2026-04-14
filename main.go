@@ -7,6 +7,9 @@ import (
 
 	"github.com/AlexhHr23/gopost-api/config"
 	"github.com/AlexhHr23/gopost-api/database"
+	"github.com/AlexhHr23/gopost-api/handlers"
+	"github.com/AlexhHr23/gopost-api/repositories"
+	"github.com/AlexhHr23/gopost-api/services"
 
 	// "github.com/AlexhHr23/gopost-api/models"
 
@@ -46,15 +49,21 @@ func main() {
 		log.Fatal("Error al conector a la base de datos: ", err)
 	}
 
+	defer database.Close()
+
+	//Inicializar repos
+	userRepo := repositories.NewUserRepository(database.DB)
+
+	//Inicializar handler
+	userService := services.NewUserService(userRepo)
+
+	//Inicializar servidor
+	userHandler := handlers.NewUserHandler(userService)
+
 	app := server.NewApp()
 
-	// app.Get("/health", health)
-
-	// app.Post("/posts", handlers.CreatetPost)
-	// app.Get("/posts", handlers.GetPosts)
-	// app.Put("/posts", handlers.UpdatetPost)
-	// app.Get("/posts/{id}", handlers.GetPostById)
-	// app.Delete("/posts/{id}", handlers.DeletePost)
+	app.Get("/health", health)
+	app.Post("/signup", userHandler.SignUpHandler)
 
 	err := app.RunServer(config.Port)
 

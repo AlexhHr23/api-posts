@@ -38,3 +38,7 @@ func (c *Context) SetUserID(id uint) {
 func (c *Context) GetUserID() context.Context {
 	return c.Ctx
 }
+
+func (c *Context) Context() context.Context {
+	return c.Ctx
+}
