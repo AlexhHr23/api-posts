@@ -110,13 +110,7 @@ func (h *PostHandler) DeletePost(c *server.Context) {
 	})
 }
 
-// func(h *PostHandler) DeletePost(c *server.Context) {
-// 	idStr := c.Request.PathValue("id")
-// 	id, _ := strconv.Atoi(idStr)
-
-// 	err := h.postService.
-// }
-
+//TODO
 // func GetPostById(c *server.Context) {
 // 	idStr := c.Request.PathValue("id")
 // 	id, _ := strconv.Atoi(idStr)
