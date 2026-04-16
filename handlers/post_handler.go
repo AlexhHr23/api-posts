@@ -4,90 +4,125 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/AlexhHr23/gopost-api/models"
 	"github.com/AlexhHr23/gopost-api/server"
+	"github.com/AlexhHr23/gopost-api/services"
 )
 
-type Post struct {
-	Id      int    `json:id`
-	Title   string `json:title`
-	Content string `json:content`
+type PostHandler struct {
+	postService *services.PostService
 }
 
-var posts []Post
-var nextId = 1
-
-func GetPosts(c *server.Context) {
-	err := c.JSON(http.StatusOK, posts)
-	if err != nil {
-		http.Error(c.RWriter, "Error al codificar JSON", http.StatusInternalServerError)
-	}
+func NewPostHandler(postService *services.PostService) *PostHandler {
+	return &PostHandler{postService: postService}
 }
 
-func CreatetPost(c *server.Context) {
+func (h *PostHandler) CreatetPost(c *server.Context) {
+	var req models.Post
 
-	var post Post
-
-	err := c.BindJson(post)
-
-	if err != nil {
-		http.Error(c.RWriter, "Error al decodificar JSON", http.StatusBadRequest)
+	if err := c.BindJson(&req); err != nil {
+		RespondError(c, NewAppError("Datos invalidos", http.StatusBadRequest))
+		return
 	}
 
-	post.Id = nextId
-	nextId++
-	posts = append(posts, post)
-
-	err = c.JSON(http.StatusCreated, post)
-	if err != nil {
-		http.Error(c.RWriter, "Error al codificar JSON", http.StatusInternalServerError)
+	if req.Title == "" || req.Content == "" {
+		RespondError(c, NewAppError("Todos los campos son obligatorios", http.StatusBadRequest))
+		return
 	}
+
+	post, err := h.postService.CreatePost(c.Context(), req.UserID, req.Title, req.Content)
+
+	if err != nil {
+		RespondError(c, NewAppError(err.Error(), http.StatusBadRequest))
+		return
+	}
+
+	c.JSON(http.StatusCreated, map[string]interface{}{
+		"message": "Post creado exitosamente",
+		"post": map[string]interface{}{
+			"id":         post.ID,
+			"title":      post.Title,
+			"content":    post.Content,
+			"user_id":    post.UserID,
+			"created_at": post.CreatedAt,
+			"updated_at": post.UpdatedAt,
+		},
+	})
 }
 
-func UpdatetPost(c *server.Context) {
+func (h *PostHandler) UpdatetPost(c *server.Context) {
 
 	idStr := c.Request.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
-	var updatedPost Post
-	err := c.BindJson(updatedPost)
+
+	var req models.Post
+
+	if err := c.BindJson(&req); err != nil {
+		RespondError(c, NewAppError("Datos invalidos", http.StatusBadRequest))
+		return
+	}
+
+	if req.Title == "" || req.Content == "" || req.UserID == 0 {
+		RespondError(c, NewAppError("Todos los campos son obligatorios", http.StatusBadRequest))
+		return
+	}
+
+	err := h.postService.UpdatePost(c.Context(), req.Title, req.Content, uint(id), req.UserID)
+
 	if err != nil {
-		http.Error(c.RWriter, "Error al decodificar JSON", http.StatusBadRequest)
+		RespondError(c, NewAppError(err.Error(), http.StatusUnauthorized))
+		return
 	}
 
-	for i := range posts {
-		if posts[i].Id == id {
-			posts[i].Title = updatedPost.Title
-			posts[i].Content = updatedPost.Content
-			c.JSON(http.StatusOK, posts[i])
-			return
-		}
-	}
-
-	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
+	c.JSON(http.StatusCreated, map[string]interface{}{
+		"message": "Post actualizado exitosamente",
+		// "post": map[string]interface{}{
+		// 	"id":         updatedPost.ID,
+		// 	"title":      updatedPost.Title,
+		// 	"content":    updatedPost.Content,
+		// 	"user_id":    updatedPost.UserID,
+		// 	"created_at": updatedPost.CreatedAt,
+		// 	"updated_at": updatedPost.UpdatedAt,
+		// },
+	})
 }
 
-func DeletePost(c *server.Context) {
-	idStr := c.Request.PathValue("id")
-	id, _ := strconv.Atoi(idStr)
-	for i := range posts {
-		if posts[i].Id == id {
-			posts = append(posts[:i], posts[i+1:]...)
-			http.Error(c.RWriter, "Post borrado correctamente", http.StatusOK)
-			return
-		}
+func (h *PostHandler) GetPosts(c *server.Context) {
+	posts, err := h.postService.GetAllPost(c.Context())
+
+	if err != nil {
+		RespondError(c, NewAppError(err.Error(), http.StatusBadRequest))
 	}
 
-	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
+	c.JSON(http.StatusCreated, map[string]interface{}{
+		"message": "Post actualizado exitosamente",
+		"posts":   posts,
+	})
 }
 
-func GetPostById(c *server.Context) {
-	idStr := c.Request.PathValue("id")
-	id, _ := strconv.Atoi(idStr)
-	for _, post := range posts {
-		if post.Id == id {
-			c.JSON(http.StatusOK, post)
-			return
-		}
-	}
+// func DeletePost(c *server.Context) {
+// 	idStr := c.Request.PathValue("id")
+// 	id, _ := strconv.Atoi(idStr)
+// 	for i := range posts {
+// 		if posts[i].Id == id {
+// 			posts = append(posts[:i], posts[i+1:]...)
+// 			http.Error(c.RWriter, "Post borrado correctamente", http.StatusOK)
+// 			return
+// 		}
+// 	}
 
-	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
-}
+// 	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
+// }
+
+// func GetPostById(c *server.Context) {
+// 	idStr := c.Request.PathValue("id")
+// 	id, _ := strconv.Atoi(idStr)
+// 	for _, post := range posts {
+// 		if post.Id == id {
+// 			c.JSON(http.StatusOK, post)
+// 			return
+// 		}
+// 	}
+
+// 	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
+// }

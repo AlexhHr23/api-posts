@@ -54,20 +54,29 @@ func main() {
 
 	//Inicializar repos
 	userRepo := repositories.NewUserRepository(database.DB)
+	postRepos := repositories.NewPostRepository(database.DB)
 
 	//Inicializar handler
 	userService := services.NewUserService(userRepo)
+	postService := services.NewPostService(postRepos)
 
 	//Inicializar servidor
 	userHandler := handlers.NewUserHandler(userService)
+	postHandler := handlers.NewPostHandler(postService)
 
 	app := server.NewApp()
 
+	//Auth
 	app.Get("/health", health)
 	app.Post("/signup", userHandler.SignUpHandler)
 	app.Post("/login", userHandler.LoginHandler)
 
 	app.Get("/me", middleware.AuthMiddleware(userHandler.MeHandler))
+
+	//Post
+	app.Post("/posts", middleware.AuthMiddleware(postHandler.CreatetPost))
+	app.Get("/posts", middleware.AuthMiddleware(postHandler.GetPosts))
+	app.Put("/posts/{id}", middleware.AuthMiddleware(postHandler.UpdatetPost))
 
 	err := app.RunServer(config.Port)
 
