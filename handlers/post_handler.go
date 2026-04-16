@@ -30,7 +30,7 @@ func (h *PostHandler) CreatetPost(c *server.Context) {
 		return
 	}
 
-	post, err := h.postService.CreatePost(c.Context(), req.UserID, req.Title, req.Content)
+	post, err := h.postService.CreatePost(c.Context(), c.UserID, req.Title, req.Content)
 
 	if err != nil {
 		RespondError(c, NewAppError(err.Error(), http.StatusBadRequest))
@@ -62,12 +62,12 @@ func (h *PostHandler) UpdatetPost(c *server.Context) {
 		return
 	}
 
-	if req.Title == "" || req.Content == "" || req.UserID == 0 {
+	if req.Title == "" || req.Content == "" {
 		RespondError(c, NewAppError("Todos los campos son obligatorios", http.StatusBadRequest))
 		return
 	}
 
-	err := h.postService.UpdatePost(c.Context(), req.Title, req.Content, uint(id), req.UserID)
+	err := h.postService.UpdatePost(c.Context(), req.Title, req.Content, uint(id), c.UserID)
 
 	if err != nil {
 		RespondError(c, NewAppError(err.Error(), http.StatusUnauthorized))
@@ -76,14 +76,6 @@ func (h *PostHandler) UpdatetPost(c *server.Context) {
 
 	c.JSON(http.StatusCreated, map[string]interface{}{
 		"message": "Post actualizado exitosamente",
-		// "post": map[string]interface{}{
-		// 	"id":         updatedPost.ID,
-		// 	"title":      updatedPost.Title,
-		// 	"content":    updatedPost.Content,
-		// 	"user_id":    updatedPost.UserID,
-		// 	"created_at": updatedPost.CreatedAt,
-		// 	"updated_at": updatedPost.UpdatedAt,
-		// },
 	})
 }
 
@@ -92,26 +84,37 @@ func (h *PostHandler) GetPosts(c *server.Context) {
 
 	if err != nil {
 		RespondError(c, NewAppError(err.Error(), http.StatusBadRequest))
+		return
 	}
 
 	c.JSON(http.StatusCreated, map[string]interface{}{
-		"message": "Post actualizado exitosamente",
-		"posts":   posts,
+		"status": "ok",
+		"posts":  posts,
 	})
 }
 
-// func DeletePost(c *server.Context) {
+func (h *PostHandler) DeletePost(c *server.Context) {
+
+	idStr := c.Request.PathValue("id")
+	id, _ := strconv.Atoi(idStr)
+
+	err := h.postService.DeletePost(c.Context(), uint(id), c.UserID)
+
+	if err != nil {
+		RespondError(c, NewAppError(err.Error(), http.StatusBadRequest))
+		return
+	}
+
+	c.JSON(http.StatusCreated, map[string]interface{}{
+		"message": "Post eliminado exitosamente",
+	})
+}
+
+// func(h *PostHandler) DeletePost(c *server.Context) {
 // 	idStr := c.Request.PathValue("id")
 // 	id, _ := strconv.Atoi(idStr)
-// 	for i := range posts {
-// 		if posts[i].Id == id {
-// 			posts = append(posts[:i], posts[i+1:]...)
-// 			http.Error(c.RWriter, "Post borrado correctamente", http.StatusOK)
-// 			return
-// 		}
-// 	}
 
-// 	http.Error(c.RWriter, "Post no encontrado", http.StatusNotFound)
+// 	err := h.postService.
 // }
 
 // func GetPostById(c *server.Context) {

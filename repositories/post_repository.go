@@ -90,7 +90,7 @@ func (r *PostRepository) FindByUserId(ctx context.Context, userId uint) ([]model
 	return posts, nil
 }
 
-func (r *PostRepository) Update(ctx context.Context, post *models.Post, id, userID uint) error {
+func (r *PostRepository) Update(ctx context.Context, post *models.Post, id uint) error {
 	query := "UPDATE posts SET title = ?, content = ? WHERE id = ?"
 	result, err := r.db.ExecContext(ctx, query, post.Title, post.Content, id)
 

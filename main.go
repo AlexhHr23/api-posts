@@ -77,6 +77,7 @@ func main() {
 	app.Post("/posts", middleware.AuthMiddleware(postHandler.CreatetPost))
 	app.Get("/posts", middleware.AuthMiddleware(postHandler.GetPosts))
 	app.Put("/posts/{id}", middleware.AuthMiddleware(postHandler.UpdatetPost))
+	app.Delete("/posts/{id}", middleware.AuthMiddleware(postHandler.DeletePost))
 
 	err := app.RunServer(config.Port)
 

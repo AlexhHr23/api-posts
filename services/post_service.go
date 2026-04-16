@@ -47,10 +47,9 @@ func (s *PostService) UpdatePost(ctx context.Context, title, content string, id,
 	post := &models.Post{
 		Title:   title,
 		Content: content,
-		UserID:  userID,
 	}
 
-	if err := s.repo.Update(ctx, post, id, userID); err != nil {
+	if err := s.repo.Update(ctx, post, id); err != nil {
 		return err
 	}
 
@@ -59,4 +58,22 @@ func (s *PostService) UpdatePost(ctx context.Context, title, content string, id,
 
 func (s *PostService) GetAllPost(ctx context.Context) ([]models.Post, error) {
 	return s.repo.FindAll(ctx)
+}
+
+func (s *PostService) DeletePost(ctx context.Context, id, userID uint) error {
+	findPost, err := s.repo.FindById(ctx, id)
+
+	if err != nil {
+		return err
+	}
+
+	if userID != findPost.UserID {
+		return fmt.Errorf("Solo el usario que creo el post puede eliminarlo")
+	}
+
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
 }
